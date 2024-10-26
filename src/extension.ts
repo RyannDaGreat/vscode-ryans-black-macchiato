@@ -1,26 +1,57 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { exec } from 'child_process';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+    let disposable = vscode.commands.registerCommand('ryans-black-macchiato.formatPython', () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showInformationMessage('No active editor found.');
+            return;
+        }
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "ryans-black-macchiato" is now active!');
+        const document = editor.document;
+        const selection = editor.selection;
+        // If there is no selection, default to formatting the whole document
+        const code = document.getText(selection.isEmpty ? new vscode.Range(0, 0, document.lineCount, 0) : selection);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('ryans-black-macchiato.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from ryans-black-macchiato!');
-	});
+        const pythonPath = vscode.workspace.getConfiguration('pythonBlackMacchiato').get<string>('pythonPath', 'python');
+        const cmd = `${pythonPath} -m macchiato`;
 
-	context.subscriptions.push(disposable);
+        const process = exec(cmd, (err, stdout, stderr) => {
+            if (err) {
+                // Error handling for the child process execution
+                vscode.window.showErrorMessage(`Error: ${stderr}`);
+                return;
+            }
+
+            editor.edit(editBuilder => {
+                if (stdout) {
+                    if (selection.isEmpty) {
+                        const entireRange = new vscode.Range(
+                            document.positionAt(0),
+                            document.positionAt(document.getText().length)
+                        );
+                        editBuilder.replace(entireRange, stdout);
+                    } else {
+                        editBuilder.replace(selection, stdout);
+                    }
+                } else {
+                    vscode.window.showErrorMessage('No output from formatting command.');
+                }
+            });
+        });
+
+        if (process.stdin) {
+            process.stdin.write(code);
+            process.stdin.end();
+        } else {
+            vscode.window.showErrorMessage('Failed to launch formatting process.');
+        }
+    });
+
+    context.subscriptions.push(disposable);
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+    // Clean up if needed
+}

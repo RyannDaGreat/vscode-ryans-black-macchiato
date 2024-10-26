@@ -9,13 +9,32 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:ryans-black-macchiato.formatPython"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "ryans-black-macchiato.helloWorld",
-        "title": "Hello World"
+        "command": "ryans-black-macchiato.formatPython",
+        "title": "Format Python with Black Macchiato"
+      }
+    ],
+    "configuration": {
+      "title": "Python Black Macchiato",
+      "properties": {
+        "pythonBlackMacchiato.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Path to the Python executable where black-macchiato is installed."
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "ryans-black-macchiato.formatPython",
+        "key": "ctrl+alt+f",
+        "when": "editorLangId == python"
       }
     ]
   },
