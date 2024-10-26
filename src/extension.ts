@@ -10,31 +10,28 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         const document = editor.document;
-        const selection = editor.selection;
-        // If there is no selection, default to formatting the whole document
-        const code = document.getText(selection.isEmpty ? new vscode.Range(0, 0, document.lineCount, 0) : selection);
+        let selection = editor.selection;
+
+        // If there is no selection, default to formatting the current line
+        if (selection.isEmpty) {
+            const currentLine = document.lineAt(selection.active.line);
+            selection = new vscode.Selection(currentLine.range.start, currentLine.range.end);
+        }
+
+        const code = document.getText(selection);
 
         const pythonPath = vscode.workspace.getConfiguration('pythonBlackMacchiato').get<string>('pythonPath', 'python');
-        const cmd = `${pythonPath} -m macchiato`;
+        const cmd = `${pythonPath} -m rp.libs.rp_black_macchiato`;
 
         const process = exec(cmd, (err, stdout, stderr) => {
             if (err) {
-                // Error handling for the child process execution
                 vscode.window.showErrorMessage(`Error: ${stderr}`);
                 return;
             }
 
             editor.edit(editBuilder => {
                 if (stdout) {
-                    if (selection.isEmpty) {
-                        const entireRange = new vscode.Range(
-                            document.positionAt(0),
-                            document.positionAt(document.getText().length)
-                        );
-                        editBuilder.replace(entireRange, stdout);
-                    } else {
-                        editBuilder.replace(selection, stdout);
-                    }
+                    editBuilder.replace(selection, stdout);
                 } else {
                     vscode.window.showErrorMessage('No output from formatting command.');
                 }
