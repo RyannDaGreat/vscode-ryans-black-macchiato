@@ -3,7 +3,8 @@
   "displayName": "ryans-black-macchiato",
   "description": "A port of black-macchiato to vscode",
   "version": "0.0.1",
-  "publisher": "your-publisher-name",
+  "repository": "https://github.com/RyannDaGreat/vscode-ryans-black-macchiato.git",
+  "publisher": "RyannDaGreat ",
   "engines": {
     "vscode": "^1.62.0"
   },
